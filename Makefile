@@ -1,3 +1,5 @@
+BOOST_FOLDER=<value>
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Makefile for Unix & Linux Systems #
 # using a GNU C++ compiler #
@@ -9,8 +11,6 @@
 # -D_USE_FIXED_PROTOTYPES_
 # --Force the compiler to use the correct headers
 # -ansi --Don't use GNU ext; do use ansi standard.
-
-BOOST_FOLDER=../boost_1_61_0
 
 INC=-I$(BOOST_FOLDER) \
  -I./include \
