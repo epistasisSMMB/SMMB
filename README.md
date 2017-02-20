@@ -12,7 +12,8 @@ SMMB is a cross-platform software package, as soon as compilation is available o
   It is needed to replace "value" with the path to the installed boost library
 
 2. execute following command lines
-    cd <path to smmb project directory> 
+
+cd <path to smmb project directory> 
     make
 
 
