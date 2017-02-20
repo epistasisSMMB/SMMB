@@ -22,4 +22,4 @@ SMMB is a cross-platform software package, as soon as compilation is available o
 
 
 ## Execution with command line
-./bin/executable <path_to_genotypes> <path_to_phenotypes>`
+    ./bin/executable <path_to_genotypes> <path_to_phenotypes>
