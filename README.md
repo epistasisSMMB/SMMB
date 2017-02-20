@@ -7,8 +7,8 @@ SMMB is a cross-platform software package, as soon as compilation is available o
 * boost library
 
 ## Compilation instructions
-### 1. Change the line n°13 in the Makefile : `BOOST_FOLDER=value`.
-It is needed to replace `value` with the path to the installed boost library.
+### 1. Change the line n°1 in the Makefile : `BOOST_FOLDER=<value>`.
+It is needed to replace `<value>` with the path to the installed boost library.
 
 ### 2. Execute following command lines:
     cd <path to SMMB project directory>
@@ -24,4 +24,4 @@ It is needed to replace `value` with the path to the installed boost library.
 ## Parameters
 The complete list of parameters can be found in the file `PARAMETERS.txt`.
 
-Each parameter is explained and can be tuned by the user.
+Each parameter is explained in `PARAMETERS.txt` and can be tuned by the user.
