@@ -1,5 +1,6 @@
 # SMMB documentation
 Stochastic Multiple Markov Blankets (SMMB)
+------------------------------------------
 
 SMMB is a cross-platform software package, as soon as compilation is available on desired workstation.
 
