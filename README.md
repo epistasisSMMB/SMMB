@@ -23,4 +23,5 @@ It is needed to replace `value` with the path to the installed boost library.
 
 ## Parameters
 The complete list of parameters can be found in the file `PARAMETERS.txt`.
+
 Each parameter is explained and can be tuned by the user.
