@@ -1,2 +1,3 @@
-# SMMB Stochastic Multiple Markov Blankets
+# SMMB
+Stochastic Multiple Markov Blankets
 
