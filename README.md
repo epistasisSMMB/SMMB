@@ -1,2 +1,2 @@
-# SMMB
-Stk
+# SMMB Stochastic Multiple Markov Blankets
+
