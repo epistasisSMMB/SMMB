@@ -7,8 +7,7 @@ SMMB is a cross-platform software package, as soon as compilation is available o
 * boost library
 
 ## Compilation instructions
-* Change the line n°13 in the Makefile :
-    BOOST_FOLDER=value
+* Change the line n°13 in the Makefile : `BOOST_FOLDER=value`
 It is needed to replace "value" with the path to the installed boost library
 
 * Execute following command lines :
