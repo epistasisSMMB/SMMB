@@ -1,14 +1,14 @@
 # SMMB documentation
 ## Stochastic Multiple Markov Blankets (SMMB)
-SMMB is a cross-platform software package, as soon as compilation is available on desired workstation.
+SMMB is a cross-platform software package, provided compilation is available on desired workstation.
 
 ## Needs for compilation
 * g++ version compatible with C++11 functionalities
-* boost library
+* boost library. The version 1.61.0 was used by the authors.
 
 ## Compilation instructions
-### 1. Change the line n°1 in the Makefile : `BOOST_FOLDER=<value>`.
-It is needed to replace `<value>` with the path to the installed boost library.
+### 1. Change the first line in the Makefile : `BOOST_FOLDER=<value>`.
+Replace `<value>` with the path to the installed boost library.
 
 ### 2. Execute following command lines:
     cd <path to SMMB project directory>
@@ -18,7 +18,7 @@ It is needed to replace `<value>` with the path to the installed boost library.
     cd <path to SMMB project directory>
     make remove
 
-## Execution with command line
+## Execute command line
     ./SMMB <path_to_genotypes> <path_to_phenotypes>
 
 ## Parameters
