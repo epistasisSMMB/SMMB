@@ -35,11 +35,11 @@ The command line to execute is:
 ## Download or clone the SMMB source code
 ### 1. ZIP download 
 An ZIP compressed archive is downloadable in the main web page of the SMMB project : https://github.com/epistasisSMMB/SMMB.
-From this web page, the user will a "Clone or download" button. Then the user will be invited to download a ZIP version of the project.
+From this web page, the user finds a "Clone or download" button. After clicking on it, the user is invited to download a ZIP version of the project.
 
 ### 2. Clone with Git
 If Git is installed on the user's workstation, SMMB can also be cloned with the following git command line:
 
     git clone https://github.com/epistasisSMMB/SMMB.git
 
-Then, a new repository will be created locally, which will contain the SMMB project (source code, Makefile, parameters file...).
+Then, a new repository is created locally, which contains the SMMB project (source code, Makefile, parameters file...).
