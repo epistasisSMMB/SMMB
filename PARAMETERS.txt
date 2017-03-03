@@ -1,0 +1,27 @@
+# number of header lines in the genotype file
+header 1
+
+# separation between fields in the genotype file
+separator ,
+
+# alpha type I error rate
+alpha 0.05
+
+# precision used in adaptative permutations
+precision 0.03
+
+# size of the largest subset, K (draw in Algorithm 1)
+subset_size_large 15
+
+# size of the smallest subset, k (draw in Algorithm 2)
+subset_size_small 3
+
+# Number of Markov blankets learned before to make the consensus
+n_mbs 100
+
+# Maximal number of iterations if there is no convergence.
+# Maximal number of trials allowed to learn one Markov blanket, for one given large subset K, if all trials result in an empty Markov blanket.
+n_trials_to_learn_mbs 30
+
+# N trials to learn a MB from a given subset (large subset)
+n_trials_to_learn_1_mb 100
