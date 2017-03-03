@@ -29,4 +29,5 @@ Each parameter is explained in `PARAMETERS.txt` and can be tuned by the user.
 ## Launch the analysis of the toy dataset
 A Bash script is provided to launch the analysis of the toy dataset in a simple way on Linux plateforms.
 The command line to execute is:
+
     ./launch_toy_dataset_analysis.sh
