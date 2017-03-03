@@ -31,3 +31,15 @@ A Bash script is provided to launch the analysis of the toy dataset in a simple 
 The command line to execute is:
 
     ./launch_toy_dataset_analysis.sh
+
+## Download or clone the SMMB source code
+### 1. ZIP download 
+An ZIP compressed archive is downloadable in the main web page of the SMMB project : https://github.com/epistasisSMMB/SMMB.
+From this web page, the user will a "Clone or download" button. Then the user will be invited to download a ZIP version of the project.
+
+### 2. Clone with Git
+IF Git is installed on the user's workstation, SMMB can also be cloned with the following git command line:
+
+    git clone https://github.com/epistasisSMMB/SMMB.git
+
+Then, a new repository will be created locally, which will contain the SMMB project (source code, Makefile, parameters file...)
