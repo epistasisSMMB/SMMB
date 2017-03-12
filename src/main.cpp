@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
     string genos_file = argv[1];
     string phenos_file = argv[2];
 
-
 //  PARAMETERS
     Parameters_file_parsing params;
     params.list_parameters();
@@ -57,17 +56,8 @@ int main(int argc, char *argv[])
     unsigned n_permut = permut.get_n();
     cout << "number of permutations : " << n_permut << endl;
     blas_matrix permuted_phenos(phenos.size(), n_permut);
-    // Services::generate_permutations(phenos, permuted_phenos);
-    // cout << "Permuted phenotypes generated." << endl;
-
-	// list<unsigned> l;
-	// blas_column geno_current(genos, 10);
-	// G2_conditional_test_indep g2(geno_current, phenos, l);
-	// cout << "g2 10 : " << g2.pval() << endl;
-	
-	// blas_column geno_current_2(genos, 39);
-	// G2_conditional_test_indep g2_2(geno_current_2, phenos, l);
-	// cout << "g2 39 : " << g2_2.pval() << endl;
+    cout << "Permuted phenotypes generated." << endl;
+    Services::generate_permutations(phenos, permuted_phenos);
 	
 //  SMMB usecase
     Smmb_usecase sm2b_usecase(genos, phenos, params, permuted_phenos);
