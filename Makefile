@@ -1,4 +1,4 @@
-BOOST_FOLDER=<value>
+BOOST_FOLDER=C:/Users/nielc/Documents/VirtualBox\ partage/workspace/boost_1_61_0
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Makefile for Unix & Linux Systems #
