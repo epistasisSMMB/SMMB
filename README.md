@@ -4,7 +4,7 @@ SMMB is a cross-platform software package, provided compilation is available on 
 
 ## Needs for compilation
 * g++ version compatible with C++11 functionalities
-* boost library. The version 1.61.0 was used by the authors.
+* boost library. The version 1.61.0 was used by the authors. It can be found at http://www.boost.org/users/history/version_1_61_0.html
 
 ## Compilation instructions
 ### 1. Change the first line in the Makefile : `BOOST_FOLDER=<value>`.
