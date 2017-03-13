@@ -24,4 +24,4 @@ n_mbs 100
 n_trials_to_learn_mbs 30
 
 # N trials to learn a MB from a given subset (large subset)
-n_trials_to_learn_1_mb 100
+n_trials_to_learn_1_mb 120
