@@ -3,6 +3,7 @@
 #include <cmath>
 #include <boost/math/distributions/negative_binomial.hpp>
 #include <omp.h>
+#include <sstream>
 
 #include "Mutual_information.hpp"
 #include "G2_conditional_test_indep.hpp"
@@ -15,24 +16,46 @@ Permutations_adapt::Permutations_adapt(blas_column const& var, blas_column const
     this->choose_r(alpha);
 }
 
+Permutations_adapt::Permutations_adapt(blas_column const& var,
+                   blas_column const& phenos,
+                   std::list<unsigned> & conditioning_set,
+                   blas_matrix & permuted_phenos,
+                   double alpha,
+                   double c,
+                   std::string mode)
+    : Permutations(var, phenos, alpha, c), _permuted_phenos(permuted_phenos), _precision(c), _Ri(0), _Bi(0), _mode(mode)
+{
+    _conditioning_set = conditioning_set;
+    this->choose_r(alpha);
+}
+
 Permutations_adapt::Permutations_adapt(blas_column const& var, blas_column const& phenos, blas_matrix & permuted_phenos, double alpha, double c)
     : Permutations(var, phenos, alpha, c), _permuted_phenos(permuted_phenos), _precision(c), _Ri(0), _Bi(0)
 {
     this->choose_r(alpha);
 }
 
+Permutations_adapt::Permutations_adapt(blas_column const& var, blas_column const& phenos, blas_matrix & permuted_phenos, int r, int n, string mode)
+    : Permutations(var, phenos, n), _permuted_phenos(permuted_phenos)
+{
+    _r = r;
+    _Ri = 0;
+    _Bi = 0;
+    _mode = mode;
+}
+
+
 void Permutations_adapt::choose_r(double alpha)
 {
     double error = alpha * _precision;
     int r = 0;
     bool found_r = false;
-    while(!found_r)
+    while(found_r == false)
     {
-        r++;
+        r += 100;
         double p1 = 0.1586553;  // P(X>1) in normal dist
         double p2 = 0.8413447;  // P(X<=1) in normal dist
 
-        double alpha = 0.05;
         boost::math::negative_binomial_distribution<double> nbinom(r, alpha);
 
         double q1 = boost::math::quantile(nbinom, p1);
@@ -45,10 +68,50 @@ void Permutations_adapt::choose_r(double alpha)
         double diff2 = abs(pval2 - alpha);
 
         double diff = std::max(diff1, diff2);
+//        stringstream s; s << diff << " < " << error << "?\n";
+//        cout << s.str();
         if(diff < error)
           found_r = true;
     }
     _r = r;
+}
+
+int Permutations_adapt::choose_r(double alpha, double precision)
+{
+    double error = alpha * precision;
+    int r = 0;
+    bool found_r = false;
+    while(found_r == false)
+    {
+        r += 100;
+        double p1 = 0.1586553;  // P(X>1) in normal dist
+        double p2 = 0.8413447;  // P(X<=1) in normal dist
+
+        boost::math::negative_binomial_distribution<double> nbinom(r, alpha);
+
+        double q1 = boost::math::quantile(nbinom, p1);
+        double q2 = boost::math::quantile(nbinom, p2);
+
+        double pval1 = (double)r/(r+q1);
+        double pval2 = (double)r/(r+q2);
+
+        double diff1 = abs(pval1 - alpha);
+        double diff2 = abs(pval2 - alpha);
+
+        double diff = std::max(diff1, diff2);
+//        stringstream s; s << diff << " < " << error << "?\n";
+//        cout << s.str();
+        if(diff < error)
+          found_r = true;
+    }
+    return r;
+}
+
+int Permutations_adapt::choose_n(double alpha, double c)
+{
+    double error = alpha * c;
+    int n = alpha*(1 - alpha) / (error*error);
+    return n;
 }
 
 unsigned Permutations_adapt::get_r() const
@@ -130,7 +193,7 @@ void Permutations_adapt::run()
             }
         }*/
 
-        while(_Ri < _r && _Bi < _n)
+        while(_Ri < _r && _Bi < _n && permutation_counter < _permuted_phenos.size2())
         {
             _Bi++;
             // permut & test
@@ -152,6 +215,9 @@ void Permutations_adapt::run()
 
 void Permutations_adapt::run(list<unsigned> const& conditional_indexes)
 {
+//    stringstream s;
+//    s << "We are in RUN(), Max number of permut : " << _n << endl;
+//    cout << s.str();
     unsigned permutation_counter = 0;
     if(_mode == "mi")
     {
@@ -201,8 +267,10 @@ void Permutations_adapt::run(list<unsigned> const& conditional_indexes)
         }
         double obs_t_stat = g2_obs.g2();
 
-//        cout << "Permutations (adaptative)." << endl;
-        while(_Ri < _r && _Bi < _n)
+//        stringstream s; s << permutation_counter << " vs " << _permuted_phenos.size2() << endl;
+//        cout << s.str();
+
+        while(_Ri < _r && _Bi < _n && permutation_counter < _permuted_phenos.size2())
         {
             _Bi++;
             // permut & test
@@ -227,9 +295,16 @@ double Permutations_adapt::correction()
 {
     double corrected_pv=0;
     if(_Bi < _n)
+    {
         corrected_pv = (double)_r/_Bi;
+//        stringstream s; s << "correction : _r = " << _r << " & _Bi = " << _Bi << " -> _r/Bi -> pvalue_corr\n";
+//        cout << s.str();
+    }
     else
+    {
         corrected_pv = (double)(_Ri+1)/(_n+1);
-
+//        stringstream s; s << "correction : _Ri+1 = " << _Ri+1 << " & _n+1 = " << _n+1 << " -> (_Ri+1)/(_n+1) -> pvalue_corr\n";
+//        cout << s.str();
+    }
     return corrected_pv;
 }

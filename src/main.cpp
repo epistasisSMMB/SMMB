@@ -50,15 +50,14 @@ int main(int argc, char *argv[])
     cout << endl << "Data imported : " << genos.size1() << " individuals X " << genos.size2() << " SNPs" << endl;
 
 //  GENERATION OF PERMUTED PHENOTYPES
-    cout << "Generation of permuted phenotypes ... ";
-    blas_column geno(genos,1);
-    Permutations_adapt permut(geno, phenos, genos, params.alpha, params.precision);
-    unsigned n_permut = permut.get_n();
-    cout << "number of permutations : " << n_permut << endl;
+    int n_permut = Permutations_adapt::choose_n(params.alpha, params.precision);
+
+    cout << "pheno size = " << phenos.size() << endl;
     blas_matrix permuted_phenos(phenos.size(), n_permut);
-    cout << "Permuted phenotypes generated." << endl;
+    cout << "permuted_phenos object created\n";
     Services::generate_permutations(phenos, permuted_phenos);
-	
+    cout << "Permuted phenotypes generated : " << n_permut << " permutations\n";
+
 //  SMMB usecase
     Smmb_usecase sm2b_usecase(genos, phenos, params, permuted_phenos);
 

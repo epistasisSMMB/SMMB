@@ -40,11 +40,12 @@ G2_test_indep::G2_test_indep(): _pval(1), _g2(0), _reliable(true), _df(0) {}
 //-----------------------------------------
 void G2_test_indep::run(Contingency const& c)
 {
-    if(!reliable_test(c))
-    {
-        _reliable = false;
-        return;
-    }
+//    if(reliable_test(c) == false)
+//    {
+//        _reliable = false;
+//        _pval = 1;
+//        return;
+//    }
     Contingency e(c);
     int n = c.sum();
 
@@ -55,12 +56,12 @@ void G2_test_indep::run(Contingency const& c)
             e(i,j) = (double)(c.sum_row(i) * c.sum_col(j)) / n;
     }
 
-/*    Do not compute g2 and pval if the test is not reliable
-//    if(! reliable_test(e))
-//    {
-//        _reliable = false;
-//        return;
-//    }*/
+//    Do not compute g2 and pval if the test is not reliable
+    if(! reliable_test(e))
+    {
+        _reliable = false;
+        return;
+    }
     compute_g2(c, e);
 
 //    cout << "g2(non-cond):" << _g2 << endl;
@@ -127,7 +128,7 @@ bool G2_test_indep::reliable_test(Contingency const& c)
 	{
 	   for(unsigned j=0; j<c.size2(); ++j)
 	   {
-		   if(c(i,j) == 0)
+           if(c(i,j) < 5)
 			   return false;
 	   }
 	}

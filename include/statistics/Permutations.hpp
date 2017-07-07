@@ -1,10 +1,12 @@
 #ifndef PERMUTATIONS_HPP
 #define PERMUTATIONS_HPP
 
+#include <list>
 #include <queue>
 
 #include "common.h"
-#include "G2_test_indep.hpp"
+
+
 
 class Permutations
 {
@@ -17,6 +19,8 @@ public:
      * \param n Number of permutations to run
      */
     Permutations(blas_column const& var, blas_column const& phenos, unsigned n);
+    Permutations(blas_column const& var, blas_column const& phenos, std::list<unsigned> & conditioning_set, unsigned n);
+
 
     /*!
      * \brief Constructor n°2. Number of permutations to run is automatically calculated thanks to (alpha, precision)
@@ -38,6 +42,7 @@ public:
      * \brief run permutations
      */
     void run();
+    void run(blas_matrix & permuted_phenos);
 
     unsigned get_n() const;
 
@@ -58,6 +63,7 @@ protected:
     blas_column const& _var;                // variable to test for association
     blas_column const& _original_phenos;    // variable to permute (a backup of its original permutation)
     unsigned _n;                            // number of permutations
+    std::list<unsigned> _conditioning_set;
     std::priority_queue<double, std::vector<double>, std::greater<double> > _pvalues_dist; // Distribution of p-values built from permutations
 };
 

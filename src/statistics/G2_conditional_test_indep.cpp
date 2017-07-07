@@ -78,6 +78,7 @@ G2_conditional_test_indep::G2_conditional_test_indep(blas_column const& genos,
                                                      std::list<unsigned> const& cond_genos_indexes,
                                                      bool do_print_contingency)
 {
+//    cout << "METHOD G2_conditional_test_indep" << endl;
     unsigned n_obs = genos.size();
     unsigned n_cond_genos = cond_genos_indexes.size();
     unsigned n_contingencies = pow(3, n_cond_genos);
@@ -117,6 +118,7 @@ G2_conditional_test_indep::G2_conditional_test_indep(blas_column const& genos,
     }
 
     run(do_print_contingency);
+//    cout << "METHOD G2_conditional_test_indep finished" << endl;
 }
 
 //----------------------------------------------------
@@ -161,11 +163,13 @@ void G2_conditional_test_indep::run(bool verbose)
             _reliable = false;
             break;
         }
+        _reliable = true;
         _g2 += g2.g2();
     }
     if(verbose)
     {
         cout << "g2_stat\t" << _g2 << "\ndf\t" << _df << endl;
+        print_contingencies();
     }
     boost::math::chi_squared_distribution<double> chi2_dist(_df);
     _pval = 1 - boost::math::cdf(chi2_dist, _g2);
@@ -179,7 +183,7 @@ void G2_conditional_test_indep::run(bool verbose)
 void G2_conditional_test_indep::print_contingencies()
 {
     cout << "Contingencies:" << endl;
-    for(unsigned i=0; i<3; i++)
+    for(unsigned i=0; i<_contingencies.size(); i++)
     {
         Contingency& c = _contingencies[i];
         cout << c << endl;

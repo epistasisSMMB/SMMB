@@ -1,18 +1,34 @@
 #include "Permutations.hpp"
-
+#include <list>
 #include <iostream>
 #include <algorithm>
 
+#include "G2_test_indep.hpp"
+#include "G2_conditional_test_indep.hpp"
+
 using namespace std;
 
-Permutations::Permutations(blas_column const& var, blas_column const& phenos, unsigned n) : _var(var), _original_phenos(phenos), _n(n) {}
+//-----------------------------------------
+// Constructors
+//-----------------------------------------
+Permutations::Permutations(blas_column const& var, blas_column const& phenos, unsigned n)
+    : _var(var), _original_phenos(phenos), _n(n)
+{}
 
-Permutations::Permutations(blas_column const& var, blas_column const& phenos, double alpha, double c): _var(var), _original_phenos(phenos)
+Permutations::Permutations(blas_column const& var, blas_column const& phenos, list<unsigned> & conditioning_set, unsigned n)
+    : _var(var), _original_phenos(phenos), _n(n), _conditioning_set(conditioning_set)
+{}
+
+Permutations::Permutations(blas_column const& var, blas_column const& phenos, double alpha, double c)
+    : _var(var), _original_phenos(phenos)
 {
     choose_b(alpha,c);
 //    cout << "number of permutations to do: " << _n << endl;
 }
 
+//-----------------------------------------
+// Permutations : run
+//-----------------------------------------
 void Permutations::run()
 {
     cout << "Permutations." << endl;
@@ -29,6 +45,28 @@ void Permutations::run()
     }
 }
 
+//-----------------------------------------
+// Permutations : run
+//-----------------------------------------
+void Permutations::run(blas_matrix & permuted_phenos)
+{
+    // size1 = number of individuals
+    // size2 = number of permuted phenos
+    for(unsigned i=0; i<permuted_phenos.size2(); ++i)
+    {
+        blas_column permuted_i(permuted_phenos,i);
+        if(! _conditioning_set.empty())
+        {
+            G2_conditional_test_indep g2_cond(_var, permuted_i,_conditioning_set);
+            if(g2_cond.is_reliable())
+                _pvalues_dist.push(g2_cond.pval());
+        }
+    }
+}
+
+//-----------------------------------------
+// Permutations : correction
+//-----------------------------------------
 double Permutations::correction(double pval)
 {
     _pvalues_dist.push(pval);
@@ -41,6 +79,9 @@ double Permutations::correction(double pval)
     return (double)(i+1)/(_n+1);
 }
 
+//-----------------------------------------
+// Permutations : choose_b
+//-----------------------------------------
 void Permutations::choose_b(double alpha, double c)
 {
     double error = alpha * c;
@@ -48,6 +89,9 @@ void Permutations::choose_b(double alpha, double c)
     _n = b;
 }
 
+//-----------------------------------------
+// Permutations : get_n
+//-----------------------------------------
 unsigned Permutations::get_n() const
 {
     return _n;

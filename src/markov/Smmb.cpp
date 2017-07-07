@@ -42,6 +42,8 @@ Smmb::Smmb(boost::numeric::ublas::matrix<int> & genos, blas::matrix_column<blas:
 
     // Counter for the total number of tests of independance during a SMMB execution.
     _n_tests = 0;
+
+    _smmb_exec_counter = 1;
 }
 
 //-----------------------------------------
@@ -58,8 +60,59 @@ Smmb::~Smmb()
 //-----------------------------------------
 void Smmb::run()
 {
-    cout << "Running SMMB" << endl;
+//    cout << "Running SMMB" << endl;
     unsigned nsnps = _genotypes.size2();
+
+//    map<list<unsigned>, double> recorded_tests;
+
+    // Learning multiple MBs
+    // Stop when 100 (i.e. _params.n_mbs) MBs are learned
+    // Each iteration this loop is guaranteed to learn a non-empty MB (mandatory for omp parallelization)
+    #pragma omp parallel for
+    for(unsigned N_MBs=0 ; N_MBs < _params.n_mbs ; N_MBs++)
+    {
+//        cout << "########### MB " << N_MBs << " #############\n";
+        bool we_cant_go_out = true;
+        do  // loop to re-sample K snps when no convergence is reached with the previous sampling
+        {
+            unsigned cpt = 0; // counter of trials to learn a MB (condition to break the sample/draw again in the current iteration)
+
+            // draw a subset of snps (size = params.subset_size_large)
+            // indexes of subset of size K will be stored here (default, K = sqrt(Nsnps))
+            list<unsigned> snps_subset;
+            Services::draw_without_replacement(0, nsnps-1, snps_subset, _params.subset_size_large, _rng);    // snps_subset given by access (reference)
+
+//            cout << "\n\tDraw_without_replacement\n\t";
+//            Services::print_list(snps_subset);
+
+            list<unsigned> mb;     // mb to learn (empty for now)
+            do  // we stay in the current high-level iteration while we learn empty MBs. We also break this loop if non-convergence is detected.
+            {
+                learn_mb(mb, snps_subset);
+//                cout << "METHOD learn_mb finished\n";
+//                cout << "mb learned: "; Services::print_list(mb);
+                cpt ++;
+            } while (mb.empty() &&  cpt < _params.n_trials_to_learn_mbs);
+
+            if(!mb.empty())
+            {
+                _mbs.push_back(mb);
+                we_cant_go_out = false;
+            }
+        } while (we_cant_go_out);
+    }
+}
+
+//-----------------------------------------
+// Smmb : run
+//-----------------------------------------
+void Smmb::run(list<unsigned> & snp_indexes)
+{
+//    cout << "Running SMMB" << endl;
+    unsigned nsnps = snp_indexes.size();
+    vector<unsigned> snp_indexesV;
+    for(list<unsigned>::const_iterator it = snp_indexes.begin(); it != snp_indexes.end(); ++it)
+        snp_indexesV.push_back(*it);
 
 //    map<list<unsigned>, double> recorded_tests;
 
@@ -76,8 +129,13 @@ void Smmb::run()
 
             // draw a subset of snps (size = params.subset_size_large)
             // indexes of subset of size K will be stored here (default, K = sqrt(Nsnps))
+            list<unsigned> position_in_snp_indexes;
+            Services::draw_without_replacement(0, nsnps-1, position_in_snp_indexes, _params.subset_size_large, _rng);    // snps_subset given by access (reference)
             list<unsigned> snps_subset;
-            Services::draw_without_replacement(0, nsnps-1, snps_subset, _params.subset_size_large, _rng);    // snps_subset given by access (reference)
+
+//            cout << "snps_subset before";
+            for(list<unsigned>::const_iterator it=position_in_snp_indexes.begin(); it != position_in_snp_indexes.end() ;it++)
+                snps_subset.push_back(snp_indexesV.at(*it));
 
             list<unsigned> mb;     // mb to learn (empty for now)
             do  // we stay in the current high-level iteration while we learn empty MBs. We also break this loop if non-convergence is detected.
@@ -88,6 +146,7 @@ void Smmb::run()
 
             if(!mb.empty())
             {
+//                cout << "Resulting non-empty MB :"; Services::print_list(mb);
                 _mbs.push_back(mb);
                 we_cant_go_out = false;
             }
@@ -100,6 +159,7 @@ void Smmb::run()
 //-----------------------------------------
 void Smmb::learn_mb(list<unsigned> & mb, list<unsigned> & geno_indexes)
 {
+//    cout << "\nMETHOD learn_mb\n";
     unsigned cpt2 = 0;  // iteration counter for 1 MB learning
     list<unsigned> mem_mb; // useful to know if any changes happen during current iteration
     do  // learning of 1 MB
@@ -117,21 +177,28 @@ void Smmb::learn_mb(list<unsigned> & mb, list<unsigned> & geno_indexes)
 //-----------------------------------------
 void Smmb::forward(list<unsigned> & mb, list<unsigned> & geno_indexes)
 {
-    list<unsigned> snps_drawn;                                          // indexes of subset of size k (by default, k=3)
-    Services::random_subset(geno_indexes, snps_drawn, _params.subset_size_small, _rng); // snps_drawn is given by access (reference)
-    snps_drawn.sort();                                                  // set sorted -> all subsets (powerset) will also be sorted.
+//    list<unsigned> snps_drawn;                                          // indexes of subset of size k (by default, k=3)
+    vector<unsigned> snps_drawnV;
+    Services::random_subset(geno_indexes, snps_drawnV, _params.subset_size_small, _rng); // snps_drawn is given by access (reference)
+    std::sort(snps_drawnV.begin(), snps_drawnV.end());                                                  // set sorted -> all subsets (powerset) will also be sorted.
 
     // A vector containing all subsets (including empty set) of snps_drawn
-    vector<list<unsigned> > allsubs;
-    Services::powerset(snps_drawn, allsubs);
+//    vector<list<unsigned> > allsubs;
+    vector<vector<unsigned> > allsubsV;
+    Services::powerset(snps_drawnV, allsubsV);
+
+//    Services::print_powerset(allsubsV);
 
     // Analysis of the powerset of snps_drawn
     unsigned best_subset_index = 100;
     double  best_subset_pvalue = 1.1;
 
-    for(unsigned i=1; i<allsubs.size(); ++i) // Start at index 1 because of [0] --> empty list (due to powerset output)
+    for(unsigned i=0; i<allsubsV.size(); ++i) // Start at index 1 because of [0] --> empty list (due to powerset output)
     {
-        list<unsigned> & current_combin = allsubs[i];   // reference to current subset
+        vector<unsigned> const& current_combinV = allsubsV[i];   // reference to current subset
+        list<unsigned> current_combin;                         // make a list from this vector
+        for(unsigned const& i: current_combinV)
+            current_combin.push_back(i);
 
         /*  Explanation of below "for block"
          *  current_combination = {snp1, snp2, snp3}
@@ -156,8 +223,13 @@ void Smmb::forward(list<unsigned> & mb, list<unsigned> & geno_indexes)
             Services::append_list_by_copy(tmp_mb, current_combin_trunc);
 
             // Conditional independance test
+//            cout << "Ind_test(" << current_geno << ", pheno | " ; Services::print_list(tmp_mb,false); cout << ")\n";
             G2_conditional_test_indep cond_g2(blas_column(_genotypes, current_geno), _phenotypes, tmp_mb);
             _n_tests ++;
+
+//            cout << "   reliable: " << cond_g2.is_reliable() << endl;
+//            cout << "   stat    : " << cond_g2.g2() << endl;
+//            cout << "   p_val   : " << cond_g2.pval() << endl;
 
             // A G2 independency test is reliable when there are enough observations in each cell of the contingency table.
             // See the method Contingency::is_reliable() for details.
@@ -175,9 +247,10 @@ void Smmb::forward(list<unsigned> & mb, list<unsigned> & geno_indexes)
     // Append the best subset if alpha < threshold
     if(best_subset_pvalue < _params.alpha)
     {
-        list<unsigned> best_subset = allsubs[best_subset_index];  //copy
-        Services::append_list_by_copy(mb, best_subset);
-        for(list<unsigned>::iterator it=best_subset.begin(); it != best_subset.end(); ++it)
+        vector<unsigned> best_subset = allsubsV[best_subset_index];  //copy
+        Services::append_vector_to_list(mb, best_subset);
+//        cout << "ADD : [ "; for(auto const& elem: best_subset) cout << elem << ", "; cout << "] => " << best_subset_pvalue << endl;
+        for(vector<unsigned>::iterator it=best_subset.begin(); it != best_subset.end(); ++it)
             geno_indexes.remove(*it);
     }
 }
@@ -191,19 +264,28 @@ void Smmb::backward(list<unsigned> & mb, list<unsigned> & geno_indexes)
     for(unsigned i=0; i<mb.size(); i++)
     {
         unsigned current = *it;
-        list<unsigned> mb_troncated = mb;   // copy
-        mb_troncated.remove(current);
+        vector<unsigned> mb_troncated;
+        for(unsigned const& i: mb)
+        {
+            if(i != current)
+                mb_troncated.push_back(i);
+        }
+//        mb_troncated.remove(current); // was useful when mb_troncated was a list<unsigned> (deprecated)
 
         bool is_erased = false;
-        vector<list<unsigned> > allsubsets;
+        vector<vector<unsigned> > allsubsets;
         Services::powerset(mb_troncated, allsubsets);
         for(unsigned j=0; j<allsubsets.size(); ++j)
         {
-            G2_conditional_test_indep cond_g2(blas_column(_genotypes, current), _phenotypes, allsubsets[j]);
+            list<unsigned> current_subset;
+            for(unsigned const& elem: allsubsets[j])
+                current_subset.push_back(elem);
+            G2_conditional_test_indep cond_g2(blas_column(_genotypes, current), _phenotypes, current_subset);
             _n_tests++;
 
             if(cond_g2.pval() > _params.alpha) // non-reliable tests have assigned a p-value equal to 1
             {
+//                cout << "Backward removal !\n";
                 geno_indexes.push_front(*it);
                 it = mb.erase(it);  // erase the current SNP from MB. Implicit iterator incrementation when erasing
                 is_erased = true;
@@ -220,7 +302,7 @@ void Smmb::backward(list<unsigned> & mb, list<unsigned> & geno_indexes)
 //-----------------------------------------
 void Smmb::make_consensus(blas_matrix & permuted_phenos)
 {
-    cout << "Running SMMB.make_consensus()" << endl;
+//    cout << "Running SMMB.make_consensus()" << endl;
     _consensus.clear();
 
     // Count occurences of each Markov blanket and make them unique (mapping MB_list => number_of_occurences)
@@ -247,57 +329,105 @@ void Smmb::make_consensus(blas_matrix & permuted_phenos)
     _consensus.sort();
     _consensus.unique();
 
-    cout << "Consensus before backward : "; Services::print_list(_consensus);
-    cout << "Corrections of p-values with permutations : this may take several minutes." << endl;
+//    print_mbs();
 
-    // BACKWARD PHASE
-    list<unsigned> mem_consensus;
-    do
+    if(_smmb_exec_counter == 1)
     {
-        mem_consensus = _consensus;
-        list<unsigned> removed_from_consensus;
+        cout << "Consensus at 1st SMMB exec: "; Services::print_list(_consensus);
+        cout << "Size of consensus : " << _consensus.size() << endl;
 
-        #pragma omp parallel for
-        for(unsigned i=0; i<_consensus.size(); i++)
+        _smmb_exec_counter++;
+        _mbs.clear();
+        run(_consensus);
+        make_consensus(permuted_phenos);
+    }
+    else
+    {
+        cout << "Consensus at 2nd SMMB exec: "; Services::print_list(_consensus);
+        cout << "Size of consensus : " << _consensus.size() << endl;
+
+//        cout << "Corrections of p-values with permutations : this may take several minutes." << endl;
+        int r_permut_adapt = Permutations_adapt::choose_r(_params.alpha, _params.precision);
+        int n_permut_adapt = permuted_phenos.size2();
+
+        // BACKWARD PHASE
+        list<unsigned> mem_consensus;
+        do
         {
-            list<unsigned> updated_consensus =_consensus;
-            Services::remove_listA_from_listB(removed_from_consensus, updated_consensus);
+            mem_consensus = _consensus;
+            list<unsigned> removed_from_consensus;
 
-            list<unsigned>::iterator it = _consensus.begin();
-            advance(it, i); // access with iterator to element to test for deletion
-            unsigned current = *it;
-            updated_consensus.remove(current);
-            vector<list<unsigned> > allsubsets;
-            Services::powerset(updated_consensus, allsubsets);
-
-            for(unsigned j=0; j<allsubsets.size(); ++j)
+            #pragma omp parallel for shared(removed_from_consensus)
+            for(unsigned i=0; i<_consensus.size(); i++)
             {
-                G2_conditional_test_indep cond_g2(blas_column(_genotypes, current), _phenotypes, allsubsets[j]);   
-                Permutations_adapt p_adapt(blas_column(_genotypes,current), _phenotypes, permuted_phenos, _params.alpha, _params.precision, "g2");
-                p_adapt.run();
-                cond_g2.set_pval(p_adapt.correction());
-			
-               list<unsigned> keymap; keymap.push_back(*it);
-               Services::append_list_by_copy(keymap, allsubsets[j]);
-               _consensus_recorded_tests[keymap] = cond_g2.pval();
-				
-                #pragma omp atomic
-                _n_tests ++;
+//                #pragma omp critical
+//                cout << "Backward analysis of " << i << endl;
+                list<unsigned> updated_consensus = _consensus;
+                Services::remove_listA_from_listB(removed_from_consensus, updated_consensus);
 
-                if(cond_g2.pval() > _params.alpha)
+                list<unsigned>::iterator it = _consensus.begin();
+                advance(it, i); // access with iterator to element to test for deletion
+                unsigned current = *it;
+                updated_consensus.remove(current);
+
+                vector<unsigned> updated_consensusV;
+                for(unsigned const& elem: updated_consensus)
+                    updated_consensusV.push_back(elem);
+
+                vector<vector<unsigned> > allsubsets;
+                Services::powerset(updated_consensusV, allsubsets);
+
+                for(unsigned j=0; j<allsubsets.size(); ++j)
                 {
-                    #pragma omp critical
-                    removed_from_consensus.push_front(current);
-                    break;
+                    list<unsigned> current_subset;
+                    for(unsigned const& elem: allsubsets[j])
+                        current_subset.push_back(elem);
+
+//                    cout << "Ind_test(" << current << ", pheno | " ; Services::print_list(current_subset,false); cout << ")\n";
+                    G2_conditional_test_indep cond_g2(blas_column(_genotypes, current), _phenotypes, current_subset);
+//                    cout << "   reliable: " << cond_g2.is_reliable() << endl;
+//                    cout << "   stat    : " << cond_g2.g2() << endl;
+//                    cout << "   p_val   : " << cond_g2.pval() << endl;
+
+                    if(cond_g2.is_reliable())
+                    {
+//                        Permutations perms(blas_column(_genotypes, current), _phenotypes, current_subset, 1000);
+//                        perms.run(permuted_phenos);
+//                        cond_g2.set_pval(perms.correction(cond_g2.pval()));
+//                        cout << "Permutations corrected p-value: " << cond_g2.pval() << endl;
+
+                        Permutations_adapt p_adapt(blas_column(_genotypes,current), _phenotypes, permuted_phenos, r_permut_adapt, n_permut_adapt, "g2");
+                        p_adapt.run(current_subset);
+                        cond_g2.set_pval(p_adapt.correction());
+//                        cout << "Permutations corrected p-value: " << cond_g2.pval() << endl;
+                    }
+
+                    list<unsigned> keymap; keymap.push_back(*it);
+                    Services::append_list_by_copy(keymap, current_subset);
+                    _consensus_recorded_tests[keymap] = cond_g2.pval();
+
+                    #pragma omp atomic
+                    _n_tests ++;
+
+                    if(cond_g2.is_reliable() && cond_g2.pval() > _params.alpha)
+                    {
+                        #pragma omp critical
+                        removed_from_consensus.push_front(current);
+                        break;
+                    }
                 }
+//                #pragma omp critical
+//                {
+//                    cout << "removed_from_consensus: ";
+//                    Services::print_list(removed_from_consensus);
+//                }
             }
-        }
-        Services::remove_listA_from_listB(removed_from_consensus, _consensus);
+            Services::remove_listA_from_listB(removed_from_consensus, _consensus);
 
-    } while (_consensus != mem_consensus);
+        } while (_consensus != mem_consensus);
 
-    cout << "Consensus after backward : "; Services::print_list(_consensus);
-
+        cout << "Consensus after backward : "; Services::print_list(_consensus);
+    }
 }
 
 //-----------------------------------------

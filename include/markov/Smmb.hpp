@@ -19,6 +19,8 @@ public:
     ~Smmb();
 
     void run();
+    void run(std::list<unsigned> & snp_indexes);
+
     void learn_mb(std::list<unsigned> & mb, std::list<unsigned> & geno_indexes);
     void forward(std::list<unsigned> & mb, std::list<unsigned> & geno_indexes);
     void backward(std::list<unsigned> & mb, std::list<unsigned> & geno_indexes);
@@ -55,6 +57,7 @@ protected:
     std::ofstream _trace_handler;               // trace file handler
     unsigned _n_tests;
     std::map<std::list<unsigned>, double> _consensus_recorded_tests;
+    unsigned _smmb_exec_counter;                // count number of executions of smmb
 
 };
 

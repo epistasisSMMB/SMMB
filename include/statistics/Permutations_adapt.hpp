@@ -10,7 +10,21 @@ class Permutations_adapt : public Permutations
 {
 public:
     Permutations_adapt(blas_column const& var, blas_column const& phenos, blas_matrix & permuted_phenos, double alpha, double precision, std::string _mode);
+    Permutations_adapt(blas_column const& var,
+                       blas_column const& phenos,
+                       std::list<unsigned> & conditioning_set,
+                       blas_matrix & permuted_phenos,
+                       double alpha,
+                       double precision,
+                       std::string _mode);
+
     Permutations_adapt(blas_column const& var, blas_column const& phenos, blas_matrix & permuted_phenos, double alpha, double precision);
+
+    Permutations_adapt(blas_column const& var, blas_column const& phenos, blas_matrix & permuted_phenos, int r, int n, std::string _mode);
+
+
+    static int choose_r(double alpha, double precision);
+    static int choose_n(double alpha, double precision);
     void run();
     void run(std::list<unsigned> const& l);
     double correction();
