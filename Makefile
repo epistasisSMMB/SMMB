@@ -23,8 +23,8 @@ INC=-I$(BOOST_FOLDER) \
  -I./include/markov
 
 
-CXXFLAGS=-std=c++11 -fopenmp -Wall -Wextra -DNDEBUG -O3 -g $(INC)
-LFLAGS=-std=c++11 -fopenmp -Wall -Wextra -DNDEBUG -O3 -I$(BOOST_FOLDER) -lm
+CXXFLAGS=-std=c++11 -fopenmp -Wall -Wextra -DNDEBUG -O2 -g $(INC)
+LFLAGS=-std=c++11 -fopenmp -Wall -Wextra -DNDEBUG -O2 -I$(BOOST_FOLDER) -lm
 
 SRCDIR=src
 OBJDIR=obj
