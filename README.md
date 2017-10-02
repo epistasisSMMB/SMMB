@@ -47,3 +47,8 @@ If Git is installed on the user's workstation, SMMB can also be cloned with the 
     git clone https://github.com/epistasisSMMB/SMMB.git
 
 Then, a new repository is created locally, which contains the SMMB project (source code, Makefile, parameters file...).
+
+## Notes about the Makefile
+The option -DNDEBUG indicates that the gcc/g++ compiler must not take assertions into account, if such assertions were inserted in the SMMB code by the user.
+
+The current Makefile will produce a optimized SMMB code with the -O2 compilation flag. If the user chooses to use the -O3 flag, a series of rather aggressive optimizations is expected. Indeed, the user is invited to test several optimization levels (-O3, -O2, but also -Os and -Ofast), in order to evaluate which optimization produces the fastest executable, depending on the circumstances. 
