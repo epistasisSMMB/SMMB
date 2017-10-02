@@ -18,11 +18,13 @@ public:
     char separator;
     double alpha;
     double precision;
+    unsigned n_smmb_runs;
     unsigned subset_size_large;
     unsigned subset_size_small;
     unsigned n_mbs;
     unsigned n_trials_to_learn_mbs;
     unsigned n_trials_to_learn_1_mb;
+
 
     std::string genos_file;
     std::string phenos_file;

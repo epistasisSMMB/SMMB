@@ -18,13 +18,17 @@ Replace `<value>` with the path to the installed boost library.
     cd <path to SMMB project directory>
     make remove
 
+In a Unix system, if the user is running a different version of gcc than the system one, the user should load the correct library fo libgomp and libstdc, using the following command:
+
+    export LD_LIBRARY_PATH=/PATH/TO/libomp_and_libstdc.so directory
+
 ## Execute command line
     ./SMMB <path_to_genotypes> <path_to_phenotypes>
 
 ## Parameters
-The complete list of parameters can be found in the file `PARAMETERS.txt`.
+The complete list of parameters can be found in the file `PARAMETERS_SMMB.txt`.
 
-Each parameter is explained in `PARAMETERS.txt` and can be tuned by the user.
+Each parameter is explained in `PARAMETERS_SMMB.txt` and can be tuned by the user.
 
 ## Launch the analysis of the toy dataset
 A Bash script is provided to launch the analysis of the toy dataset in a simple way on Linux plateforms.

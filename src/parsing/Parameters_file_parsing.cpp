@@ -16,7 +16,7 @@ using namespace std;
 //=================================================
 Parameters_file_parsing::Parameters_file_parsing()
 {
-    ifstream file("./PARAMETERS.txt");
+    ifstream file("./PARAMETERS_SMMB.txt");
     if(file)
     {
         string line;
@@ -31,7 +31,7 @@ Parameters_file_parsing::Parameters_file_parsing()
     }
     else
     {
-        std::cerr << "Error while opening PARAMETERS.txt !\n";
+        std::cerr << "Error while opening PARAMETERS_SMMB.txt !\n";
     }
 }
 
@@ -55,11 +55,13 @@ void Parameters_file_parsing::import_line(string const& line)
             separator = value.at(0);
     }
     else if(key == "alpha")
-
         alpha = atof(value.c_str());
 
     else if(key == "precision")
         precision = atof(value.c_str());
+
+    else if(key == "n_smmb_runs")
+        n_smmb_runs = atoi(value.c_str());
 
     else if(key == "subset_size_large")
     {

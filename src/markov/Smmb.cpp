@@ -43,7 +43,7 @@ Smmb::Smmb(boost::numeric::ublas::matrix<int> & genos, blas::matrix_column<blas:
     // Counter for the total number of tests of independance during a SMMB execution.
     _n_tests = 0;
 
-    _smmb_exec_counter = 1;
+    _smmb_exec_counter = params.n_smmb_runs;
 }
 
 //-----------------------------------------
@@ -330,22 +330,28 @@ void Smmb::make_consensus(blas_matrix & permuted_phenos)
     _consensus.unique();
 
 //    print_mbs();
+    cout << "MBs:\n";
+    for(map<list<unsigned>, unsigned>::const_iterator it = mb_occurence.begin(); it != mb_occurence.end(); ++it)
+    {
+        list<unsigned> const& li = it->first;
+        cout << "{ ";
+        for (list<unsigned>::const_iterator l_it=li.begin(); l_it != li.end(); ++l_it)
+            cout << *l_it << " ";
+        cout << "} => " << it->second << "\n" ;
+    }
 
-    if(_smmb_exec_counter == 1)
+    if(_smmb_exec_counter > 1)
     {
         cout << "Consensus at 1st SMMB exec: "; Services::print_list(_consensus);
         cout << "Size of consensus : " << _consensus.size() << endl;
 
-        _smmb_exec_counter++;
+        _smmb_exec_counter--;
         _mbs.clear();
         run(_consensus);
         make_consensus(permuted_phenos);
     }
     else
     {
-        cout << "Consensus at 2nd SMMB exec: "; Services::print_list(_consensus);
-        cout << "Size of consensus : " << _consensus.size() << endl;
-
 //        cout << "Corrections of p-values with permutations : this may take several minutes." << endl;
         int r_permut_adapt = Permutations_adapt::choose_r(_params.alpha, _params.precision);
         int n_permut_adapt = permuted_phenos.size2();
@@ -360,7 +366,6 @@ void Smmb::make_consensus(blas_matrix & permuted_phenos)
             #pragma omp parallel for shared(removed_from_consensus)
             for(unsigned i=0; i<_consensus.size(); i++)
             {
-//                #pragma omp critical
 //                cout << "Backward analysis of " << i << endl;
                 list<unsigned> updated_consensus = _consensus;
                 Services::remove_listA_from_listB(removed_from_consensus, updated_consensus);
@@ -391,11 +396,6 @@ void Smmb::make_consensus(blas_matrix & permuted_phenos)
 
                     if(cond_g2.is_reliable())
                     {
-//                        Permutations perms(blas_column(_genotypes, current), _phenotypes, current_subset, 1000);
-//                        perms.run(permuted_phenos);
-//                        cond_g2.set_pval(perms.correction(cond_g2.pval()));
-//                        cout << "Permutations corrected p-value: " << cond_g2.pval() << endl;
-
                         Permutations_adapt p_adapt(blas_column(_genotypes,current), _phenotypes, permuted_phenos, r_permut_adapt, n_permut_adapt, "g2");
                         p_adapt.run(current_subset);
                         cond_g2.set_pval(p_adapt.correction());
@@ -416,11 +416,6 @@ void Smmb::make_consensus(blas_matrix & permuted_phenos)
                         break;
                     }
                 }
-//                #pragma omp critical
-//                {
-//                    cout << "removed_from_consensus: ";
-//                    Services::print_list(removed_from_consensus);
-//                }
             }
             Services::remove_listA_from_listB(removed_from_consensus, _consensus);
 
@@ -436,8 +431,8 @@ void Smmb::make_consensus(blas_matrix & permuted_phenos)
 void Smmb::write_result(double duration)
 {
     _results_handler << "Duration\t" << duration << " milliseconds" << endl;
-    _results_handler << "Output_file\t" << _params.genos_file << endl;
-    _results_handler << "N_tests\t" << _n_tests << endl;
+    _results_handler << "Input_file\t" << _params.genos_file << endl;
+    _results_handler << "N_statistical_tests\t" << _n_tests << endl;
     _results_handler << "Markov_blanket consensus\t";
     list<unsigned>::const_iterator before_end=_consensus.end(); --before_end;
     _results_handler << "{ ";
@@ -445,7 +440,7 @@ void Smmb::write_result(double duration)
         _results_handler << *it << " ";
     _results_handler << _consensus.back() << " }" << endl;
 
-    _results_handler << endl << "### Occurences of weak learner MBs ####" << endl;
+    _results_handler << endl << "### Occurrences of weak learner MBs ####" << endl;
     map<list<unsigned>, unsigned> mb_occurence;
     for(list<list<unsigned> >::iterator it=_mbs.begin(); it!=_mbs.end(); ++it)
     {
@@ -474,11 +469,25 @@ void Smmb::write_result(double duration)
     _results_handler << endl << "### p_values ###" << endl;
     for(map<list<unsigned>, double>::const_iterator it = _consensus_recorded_tests.begin(); it != _consensus_recorded_tests.end(); ++it)
     {
-        list<unsigned> const& current_combin = it->first;
-        _results_handler << "{ ";
-        for (list<unsigned>::const_iterator l_it=current_combin.begin(); l_it != current_combin.end(); ++l_it)
-            _results_handler << *l_it << " ";
-        _results_handler << "} => " << it->second << "\n" ;
+        if(it->second <= _params.alpha)
+        {
+            list<unsigned> const& current_combin = it->first;
+            list<unsigned>::const_iterator l_it=current_combin.begin();
+            _results_handler << "Indep( " << *l_it << ", phenotype ";
+            if(current_combin.size() > 1)
+            {
+                _results_handler << "| ";
+                advance(l_it, 1);
+                for (; l_it != current_combin.end(); ++l_it)
+                    _results_handler << *l_it << " ";
+                _results_handler << ") => " << it->second << "\n" ;
+            }
+            else
+            {
+                _results_handler << ")\n";
+            }
+
+        }
     }
 }
 

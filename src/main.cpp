@@ -51,12 +51,9 @@ int main(int argc, char *argv[])
 
 //  GENERATION OF PERMUTED PHENOTYPES
     int n_permut = Permutations_adapt::choose_n(params.alpha, params.precision);
-
     cout << "pheno size = " << phenos.size() << endl;
     blas_matrix permuted_phenos(phenos.size(), n_permut);
-    cout << "permuted_phenos object created\n";
     Services::generate_permutations(phenos, permuted_phenos);
-    cout << "Permuted phenotypes generated : " << n_permut << " permutations\n";
 
 //  SMMB usecase
     Smmb_usecase sm2b_usecase(genos, phenos, params, permuted_phenos);

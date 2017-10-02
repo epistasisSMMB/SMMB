@@ -1,0 +1,5 @@
+The SMMB software program is dedicated to feature selection based on Markov blanket construction.
+
+List of contributors involved in the development of the versions of the SMMB software:
+- Clément Niel, PhD student (2014-2017), University of Nantes, France.
+- Christine Sinoquet, PhD supervisor, LS2N / UMR CNRS 6004 (Digital Science Institute of Nantes), France.

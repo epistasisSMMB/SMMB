@@ -4,6 +4,9 @@ header 1
 # separation between fields in the genotype file
 separator ,
 
+# number of consecutive runs of SMMB
+n_smmb_runs 1
+
 # alpha type I error rate
 alpha 0.05
 
@@ -11,17 +14,17 @@ alpha 0.05
 precision 0.03
 
 # size of the largest subset, K (draw in Algorithm 1)
-subset_size_large 15
+subset_size_large 10
 
 # size of the smallest subset, k (draw in Algorithm 2)
 subset_size_small 3
 
 # Number of Markov blankets learned before to make the consensus
-n_mbs 100
+n_mbs 100 
 
 # Maximal number of iterations if there is no convergence.
 # Maximal number of trials allowed to learn one Markov blanket, for one given large subset K, if all trials result in an empty Markov blanket.
-n_trials_to_learn_mbs 30
+n_trials_to_learn_mbs 10
 
 # N trials to learn a MB from a given subset (large subset)
-n_trials_to_learn_1_mb 120
+n_trials_to_learn_1_mb 30
